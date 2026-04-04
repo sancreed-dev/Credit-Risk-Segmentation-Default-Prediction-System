@@ -1,0 +1,15 @@
+{
+  "accounts": 30000,
+  "overall_default_rate": 22.12,
+  "total_exposure_usd": 162081602.58064514,
+  "xgb_pr_auc": 0.46594293825535876,
+  "xgb_f2": 0.5928708879318244,
+  "optimal_threshold": 0.1,
+  "test_period_cost_saving": 31290.0,
+  "annualized_cost_saving": 1877400.0,
+  "top_features": [
+    "on_time_months",
+    "consecutive_delays",
+    "balance_volatility"
+  ]
+}
