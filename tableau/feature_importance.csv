@@ -1,0 +1,9 @@
+feature_name,mean_abs_shap_value,rank
+on_time_months,2.2372115,1
+consecutive_delays,0.871732,2
+balance_volatility,0.4799293,3
+delinquency_drift,0.43118083,4
+avg_utilization,0.37529445,5
+payment_ratio,0.36762214,6
+utilization_trend,0.2818244,7
+max_delinquency,0.23516552,8
