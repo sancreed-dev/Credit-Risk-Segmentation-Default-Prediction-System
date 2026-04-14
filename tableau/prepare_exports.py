@@ -2,20 +2,30 @@
 Tableau dashboard specification
 ===============================
 
-View 1 - Portfolio Risk Overview:
-KPI cards for total accounts, total exposure, overall default rate, and high-risk
-account count. Add a bar chart of default rate by risk tier and a treemap of
-credit exposure by tier. Use High Risk = red, Medium Risk = amber, Low Risk = green.
+This script is the PostgreSQL-backed export path. For the local CSV-backed path,
+run scripts/enhance_tableau_exports.py after scripts/build_project_outputs.py.
 
-View 2 - Roll Rate Matrix:
-Heatmap where rows = from_bucket, columns = to_bucket, color intensity =
-pct_of_accounts. A dark diagonal means most accounts stay in their current
-state; dark off-diagonal cells are warning signals.
+Build the final dashboard as a 5-tab credit risk command center:
 
-View 3 - Account Risk Explorer:
-Scatter plot of avg_utilization (x) vs risk_score (y), colored by risk_tier.
-Filter by credit_limit band. Tooltip shows utilization, delinquency, on-time
-months, credit limit, and default label.
+Tab 1 - Executive Overview:
+KPI cards for total accounts, total exposure, overall default rate, high-risk
+accounts, High-Low default spread, and annualized cost reduction. Add a bar chart
+of default rate by tier and a treemap of exposure by tier.
+
+Tab 2 - Portfolio Segmentation:
+Feature profile heatmap by risk tier, stacked utilization-band distribution, and
+expected loss by credit-limit band.
+
+Tab 3 - Delinquency Migration:
+Roll-rate heatmap, month-over-month delinquency trend, and forward roll summary.
+
+Tab 4 - Model & Cost:
+Threshold cost curve, annualized cost saving versus 0.50 threshold, SHAP feature
+importance, and risk-score decile validation.
+
+Tab 5 - Account Action Queue:
+Prioritized account table and scatter plot of utilization versus risk score,
+colored by recommended action and sized by exposure.
 """
 
 from __future__ import annotations
@@ -103,14 +113,41 @@ def main() -> None:
         """,
     )
 
-    # These three files are normally produced by notebooks/modeling.ipynb.
-    for name in ["risk_score_distribution.csv", "top_risk_accounts.csv", "feature_importance.csv"]:
+    # These files are normally produced by scripts/build_project_outputs.py and
+    # scripts/enhance_tableau_exports.py. Copy them into tableau/ when present.
+    generated_exports = [
+        "risk_score_distribution.csv",
+        "top_risk_accounts.csv",
+        "feature_importance.csv",
+        "executive_kpis.csv",
+        "tier_summary_enhanced.csv",
+        "risk_tier_feature_profile.csv",
+        "monthly_delinquency_trend.csv",
+        "roll_rate_sankey_edges.csv",
+        "forward_roll_summary.csv",
+        "utilization_band_analysis.csv",
+        "risk_score_deciles.csv",
+        "credit_limit_band_analysis.csv",
+        "demographic_risk_mix.csv",
+        "threshold_cost_analysis.csv",
+        "account_action_queue.csv",
+        "feature_importance_story.csv",
+    ]
+    for name in generated_exports:
         src = ROOT / "data" / "processed" / name
         if src.exists():
-            pd.read_csv(src).to_csv(TABLEAU_DIR / name, index=False)
+            df = pd.read_csv(src)
+            if name == "top_risk_accounts.csv":
+                if "default_risk_score" not in df.columns and "risk_score" in df.columns:
+                    df.insert(df.columns.get_loc("risk_score") + 1, "default_risk_score", df["risk_score"])
+            df.to_csv(TABLEAU_DIR / name, index=False)
             print(f"Copied {name}")
+            continue
+        src = ROOT / "tableau" / name
+        if src.exists():
+            print(f"Already available {name}")
         else:
-            print(f"Skipped {name}; run notebooks/modeling.ipynb or scripts/build_project_outputs.py first.")
+            print(f"Skipped {name}; run scripts/build_project_outputs.py and scripts/enhance_tableau_exports.py first.")
 
 
 if __name__ == "__main__":

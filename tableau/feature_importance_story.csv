@@ -1,0 +1,9 @@
+feature_name,mean_abs_shap_value,rank,business_interpretation
+on_time_months,2.2372115,1,Fewer current months indicate deteriorating payment discipline.
+consecutive_delays,0.871732,2,Persistent delays are stronger warning signals than one-off misses.
+balance_volatility,0.4799293,3,Large balance swings can indicate unstable spending or income shocks.
+delinquency_drift,0.43118083,4,Repayment status volatility indicates inconsistent behavior.
+avg_utilization,0.37529445,5,High utilization means low remaining credit buffer.
+payment_ratio,0.36762214,6,Higher repayment relative to bill balance lowers risk.
+utilization_trend,0.2818244,7,Rising utilization shows worsening credit dependence.
+max_delinquency,0.23516552,8,Worst arrears level captures severity of repayment stress.

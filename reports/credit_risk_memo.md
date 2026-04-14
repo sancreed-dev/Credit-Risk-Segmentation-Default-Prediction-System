@@ -57,4 +57,4 @@ The XGBoost classifier achieved PR-AUC 0.466 and F2 0.593. The cost matrix uses 
 - `sql/04_risk_tiers.sql`
 - `sql/05_roll_rates.sql`
 - `notebooks/modeling.ipynb`
-- Tableau dashboard CSVs in `tableau/`; dashboard link placeholder: add your published Tableau Public URL after building the workbook.
+- Tableau dashboard CSVs, storyboard, and build instructions in `tableau/`; dashboard link placeholder: add your published Tableau Public URL after building the workbook.

@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import shap
+import enhance_tableau_exports
 from imblearn.over_sampling import SMOTE
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -322,7 +323,7 @@ def train_models(df: pd.DataFrame) -> dict:
     all_scores = model.predict_proba(X)[:, 1]
     risk_scores = df[["customer_id", "risk_tier", "default_next_month", *FEATURES, "credit_limit"]].copy()
     risk_scores["risk_score"] = all_scores
-    risk_scores["fraud_risk_score"] = all_scores
+    risk_scores["default_risk_score"] = all_scores
     risk_scores = risk_scores.sort_values("risk_score", ascending=False)
 
     top_test_idx = np.argsort(prob)[-20:][::-1]
@@ -444,7 +445,7 @@ def export_tables(
                 "customer_id",
                 "risk_tier",
                 "risk_score",
-                "fraud_risk_score",
+                "default_risk_score",
                 "avg_utilization",
                 "max_delinquency",
                 "on_time_months",
@@ -587,7 +588,7 @@ The XGBoost classifier achieved PR-AUC {model["xgb_pr_auc"]:.3f} and F2 {model["
 - `sql/04_risk_tiers.sql`
 - `sql/05_roll_rates.sql`
 - `notebooks/modeling.ipynb`
-- Tableau dashboard CSVs in `tableau/`; dashboard link placeholder: add your published Tableau Public URL after building the workbook.
+- Tableau dashboard CSVs, storyboard, and build instructions in `tableau/`; dashboard link placeholder: add your published Tableau Public URL after building the workbook.
 """
     (REPORTS / "credit_risk_memo.md").write_text(memo, encoding="utf-8")
 
@@ -639,7 +640,13 @@ psql -d credit_risk -f sql/05_roll_rates.sql
 ```
 
 6. Open `notebooks/modeling.ipynb` for the full modeling workflow.
-7. Use the CSVs in `tableau/` to build the three-view dashboard.
+7. Run the enhanced Tableau export builder:
+
+```powershell
+python scripts/enhance_tableau_exports.py
+```
+
+8. Use `tableau/tableau_build_instructions.md` to build the polished 5-tab dashboard.
 
 ## Key Findings
 
@@ -652,7 +659,6 @@ psql -d credit_risk -f sql/05_roll_rates.sql
 ## File Structure
 
 ```text
-credit-risk-project/
 +-- sql/                 PostgreSQL schema, ingest, features, tiers, roll rates
 +-- notebooks/           Business-first modeling notebook
 +-- reports/             Credit risk memo and generated figures
@@ -671,7 +677,7 @@ PostgreSQL, Python, pandas, scikit-learn, XGBoost, SHAP, imbalanced-learn, matpl
 - Designed a normalised PostgreSQL schema and engineered 8 behavioural risk features (utilisation trend, payment drift, roll rates, balance volatility) using CTEs and window functions across {metrics["accounts"]:,} credit card accounts
 - Built a rule-based risk tier model separating default rates from {low["default_rate_pct"]:.1f}% to {high["default_rate_pct"]:.1f}% across tiers; performed roll-rate analysis identifying {roll_30_60_pct:.1f}% of 30-DPD accounts roll to 60-DPD within 2 months
 - Trained XGBoost classifier (PR-AUC {model["xgb_pr_auc"]:.3f}, F2 {model["xgb_f2"]:.3f}); optimised decision threshold via a $150/$10 FN/FP cost matrix, reducing estimated annual misclassification cost by ${annualized_cost_saving:,.0f} vs a 0.5 threshold baseline
-- Produced a 4-section credit risk memo with portfolio overview, roll-rate analysis, and 3 prioritised recommendations; delivered findings in an interactive 3-view Tableau dashboard [link]
+- Produced a 4-section credit risk memo with portfolio overview, roll-rate analysis, and 3 prioritised recommendations; delivered findings in an interactive 5-tab Tableau risk command center [link]
 """
     (ROOT / "README.md").write_text(readme, encoding="utf-8")
 
@@ -695,8 +701,8 @@ def write_notebook(metrics: dict) -> None:
         nbf.v4.new_code_cell(f"print('Optimal threshold: {model['optimal_threshold']:.2f}')\nprint('Cost at 0.50: ${model['cost_05']:,.0f}')\nprint('Cost at optimum: ${model['cost_opt']:,.0f}')\nfrom IPython.display import Image, display\ndisplay(Image(filename=str(ROOT / 'reports/figures/cost_vs_threshold.png')))"),
         nbf.v4.new_markdown_cell(f"## SHAP Explainability\n\nBusiness purpose: translate model scoring into analyst-readable drivers. The model flags accounts primarily because of {', '.join(metrics['top_features'])}; analysts should prioritize customers showing these signals together."),
         nbf.v4.new_code_cell("from IPython.display import Image, display\ndisplay(Image(filename=str(ROOT / 'reports/figures/shap_global_feature_importance.png')))\ndisplay(Image(filename=str(ROOT / 'reports/figures/shap_beeswarm.png')))\npd.read_csv(ROOT / 'data/processed/top_20_shap_drivers.csv').head(20)"),
-        nbf.v4.new_markdown_cell("## Risk Score Output\n\nBusiness purpose: produce account-level scores and clean Tableau exports for monitoring, triage, and executive review."),
-        nbf.v4.new_code_cell("for file in ['risk_scores.csv','tier_summary.csv','roll_rate_matrix.csv','top_risk_accounts.csv']:\n    path = ROOT / 'data/processed' / file\n    print(file, pd.read_csv(path).shape)"),
+        nbf.v4.new_markdown_cell("## Risk Score Output\n\nBusiness purpose: produce account-level scores and clean Tableau exports for monitoring, triage, cost review, and account-level action."),
+        nbf.v4.new_code_cell("for file in ['risk_scores.csv','tier_summary.csv','roll_rate_matrix.csv','top_risk_accounts.csv','threshold_cost_curve.csv','feature_importance.csv']:\n    path = ROOT / 'data/processed' / file\n    print(file, pd.read_csv(path).shape)\nprint('Enhanced Tableau instructions: ../tableau/tableau_build_instructions.md')"),
     ]
     nb["cells"] = cells
     nbf.write(nb, NOTEBOOK)
@@ -715,6 +721,7 @@ def main() -> None:
     write_memo(metrics)
     write_readme(metrics)
     write_notebook(metrics)
+    enhance_tableau_exports.main()
     print("Phase 1 complete: folder structure and environment files created.")
     print("Phase 2 complete: PostgreSQL schema written.")
     print("Phase 3 complete: raw UCI data converted and analytical tables exported.")
@@ -723,7 +730,7 @@ def main() -> None:
     print("Phase 6 complete: roll-rate matrix exported.")
     print("Phase 7 complete: models trained, plots generated, notebook created.")
     print("Phase 8 complete: credit risk memo written.")
-    print("Phase 9 complete: Tableau-ready CSVs exported.")
+    print("Phase 9 complete: enhanced Tableau-ready CSVs and build instructions exported.")
     print("Phase 10 complete: README and CV bullets generated.")
 
 

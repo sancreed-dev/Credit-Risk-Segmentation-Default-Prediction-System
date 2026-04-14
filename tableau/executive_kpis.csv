@@ -1,0 +1,7 @@
+metric,value,formatted_value,tooltip
+Total Accounts,30000.0,"30,000",Total accounts in the analyzed card portfolio
+Total Exposure,162081602.58064514,"$162,081,603",Maximum approved credit exposure converted from TWD to USD
+Overall Default Rate,22.12,22.1%,Observed next-month default rate
+High Risk Accounts,3939.0,"3,939",Accounts assigned to High Risk tier by behavioral rules
+High-Low Default Spread,44.96729244307105,45.0 pts,Difference in default rate between High Risk and Low Risk tiers
+Annualized Cost Reduction,1877400.0,"$1,877,400",Cost saving annualized from the 20% holdout set to full monthly portfolio scoring

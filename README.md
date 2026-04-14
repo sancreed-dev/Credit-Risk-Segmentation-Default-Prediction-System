@@ -33,7 +33,13 @@ psql -d credit_risk -f sql/05_roll_rates.sql
 ```
 
 6. Open `notebooks/modeling.ipynb` for the full modeling workflow.
-7. Use the CSVs in `tableau/` to build the three-view dashboard.
+7. Run the enhanced Tableau export builder:
+
+```powershell
+python scripts/enhance_tableau_exports.py
+```
+
+8. Use `tableau/tableau_build_instructions.md` to build the polished 5-tab dashboard.
 
 ## Key Findings
 
@@ -46,7 +52,6 @@ psql -d credit_risk -f sql/05_roll_rates.sql
 ## File Structure
 
 ```text
-credit-risk-project/
 +-- sql/                 PostgreSQL schema, ingest, features, tiers, roll rates
 +-- notebooks/           Business-first modeling notebook
 +-- reports/             Credit risk memo and generated figures
@@ -65,4 +70,4 @@ PostgreSQL, Python, pandas, scikit-learn, XGBoost, SHAP, imbalanced-learn, matpl
 - Designed a normalised PostgreSQL schema and engineered 8 behavioural risk features (utilisation trend, payment drift, roll rates, balance volatility) using CTEs and window functions across 30,000 credit card accounts
 - Built a rule-based risk tier model separating default rates from 11.1% to 56.1% across tiers; performed roll-rate analysis identifying 45.3% of 30-DPD accounts roll to 60-DPD within 2 months
 - Trained XGBoost classifier (PR-AUC 0.466, F2 0.593); optimised decision threshold via a $150/$10 FN/FP cost matrix, reducing estimated annual misclassification cost by $1,877,400 vs a 0.5 threshold baseline
-- Produced a 4-section credit risk memo with portfolio overview, roll-rate analysis, and 3 prioritised recommendations; delivered findings in an interactive 3-view Tableau dashboard [link]
+- Produced a 4-section credit risk memo with portfolio overview, roll-rate analysis, and 3 prioritised recommendations; delivered findings in an interactive 5-tab Tableau risk command center [link]
